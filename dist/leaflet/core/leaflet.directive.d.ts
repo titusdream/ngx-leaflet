@@ -38,6 +38,7 @@ export declare class LeafletDirective implements OnChanges, OnInit {
      * @param zoom The new zoom level
      */
     private setView(center, zoom);
+    private setFlyTo(center, zoom);
     /**
      * Set the map zoom level
      * @param zoom the new zoom level for the map

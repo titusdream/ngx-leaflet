@@ -86,7 +86,7 @@ export class LeafletDirective
 
 		// Zooming and Panning
 		if (changes['zoom'] && changes['center'] && null != this.zoom && null != this.center) {
-			this.setView(changes['center'].currentValue, changes['zoom'].currentValue);
+			this.setFlyTo(changes['center'].currentValue, changes['zoom'].currentValue);
 		}
 		// Set the zoom level
 		else if (changes['zoom']) {
@@ -152,6 +152,14 @@ export class LeafletDirective
 		}
 
 	}
+
+  private setFlyTo(center: LatLng, zoom: number) {
+
+    if (this.map && null != center && null != zoom) {
+      this.map.flyTo(center, zoom, this.zoomPanOptions);
+    }
+
+  }
 
 	/**
 	 * Set the map zoom level
