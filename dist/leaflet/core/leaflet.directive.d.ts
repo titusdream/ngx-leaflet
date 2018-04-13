@@ -17,6 +17,7 @@ export declare class LeafletDirective implements OnChanges, OnInit {
     zoom: number;
     center: LatLng;
     fitBounds: LatLngBounds;
+    moveEnd: EventEmitter<{}>;
     constructor(element: ElementRef, zone: NgZone);
     ngOnInit(): void;
     ngOnChanges(changes: {

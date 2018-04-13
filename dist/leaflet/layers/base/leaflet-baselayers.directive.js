@@ -1,12 +1,3 @@
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
 import { Directive, Input, KeyValueDiffers, NgZone } from '@angular/core';
 import { Control } from 'leaflet';
 import { LeafletUtil } from '../../core/leaflet.util';
@@ -36,8 +27,9 @@ var LeafletBaseLayersDirective = /** @class */ (function () {
         get: function () {
             return this.baseLayersValue;
         },
+        set: 
         // Set/get baseLayers
-        set: function (v) {
+        function (v) {
             this.baseLayersValue = v;
             this.updateBaseLayers();
         },
@@ -54,6 +46,7 @@ var LeafletBaseLayersDirective = /** @class */ (function () {
         this.leafletDirective.init();
         // Create the control outside angular to prevent events from triggering chnage detection
         this.zone.runOutsideAngular(function () {
+            // Initially configure the controlLayers
             // Initially configure the controlLayers
             _this.controlLayers
                 .init({}, _this.layersControlOptions)
@@ -78,7 +71,13 @@ var LeafletBaseLayersDirective = /** @class */ (function () {
     /**
      * Check the current base layer and change it to the new one if necessary
      */
-    LeafletBaseLayersDirective.prototype.syncBaseLayer = function () {
+    /**
+         * Check the current base layer and change it to the new one if necessary
+         */
+    LeafletBaseLayersDirective.prototype.syncBaseLayer = /**
+         * Check the current base layer and change it to the new one if necessary
+         */
+    function () {
         var _this = this;
         var map = this.leafletDirective.getMap();
         var layers = LeafletUtil.mapToArray(this.baseLayers);
@@ -103,21 +102,21 @@ var LeafletBaseLayersDirective = /** @class */ (function () {
             }
         }
     };
-    __decorate([
-        Input('leafletBaseLayers'),
-        __metadata("design:type", Object),
-        __metadata("design:paramtypes", [Object])
-    ], LeafletBaseLayersDirective.prototype, "baseLayers", null);
-    __decorate([
-        Input('leafletLayersControlOptions'),
-        __metadata("design:type", Object)
-    ], LeafletBaseLayersDirective.prototype, "layersControlOptions", void 0);
-    LeafletBaseLayersDirective = __decorate([
-        Directive({
-            selector: '[leafletBaseLayers]'
-        }),
-        __metadata("design:paramtypes", [LeafletDirective, KeyValueDiffers, NgZone])
-    ], LeafletBaseLayersDirective);
+    LeafletBaseLayersDirective.decorators = [
+        { type: Directive, args: [{
+                    selector: '[leafletBaseLayers]'
+                },] },
+    ];
+    /** @nocollapse */
+    LeafletBaseLayersDirective.ctorParameters = function () { return [
+        { type: LeafletDirective, },
+        { type: KeyValueDiffers, },
+        { type: NgZone, },
+    ]; };
+    LeafletBaseLayersDirective.propDecorators = {
+        "baseLayers": [{ type: Input, args: ['leafletBaseLayers',] },],
+        "layersControlOptions": [{ type: Input, args: ['leafletLayersControlOptions',] },],
+    };
     return LeafletBaseLayersDirective;
 }());
 export { LeafletBaseLayersDirective };

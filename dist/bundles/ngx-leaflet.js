@@ -21,6 +21,7 @@ var LeafletDirective = /** @class */ (function () {
         this.options = {};
         // Configure callback function for the map
         this.mapReady = new core.EventEmitter();
+        this.moveEnd = new core.EventEmitter();
     }
     LeafletDirective.prototype.ngOnInit = function () {
         var _this = this;
@@ -43,17 +44,19 @@ var LeafletDirective = /** @class */ (function () {
         this.mapReady.emit(this.map);
     };
     LeafletDirective.prototype.ngOnChanges = function (changes) {
+        var _this = this;
         /*
-                 * The following code is to address an issue with our (basic) implementation of
-                 * zooming and panning. From our testing, it seems that a pan operation followed
-                 * by a zoom operation in the same thread will interfere with eachother. The zoom
-                 * operation interrupts/cancels the pan, resulting in a final center point that is
-                 * inaccurate. The solution seems to be to either separate them with a timeout or
-                  * to collapse them into a setView call.
-                 */
+             * The following code is to address an issue with our (basic) implementation of
+             * zooming and panning. From our testing, it seems that a pan operation followed
+             * by a zoom operation in the same thread will interfere with eachother. The zoom
+             * operation interrupts/cancels the pan, resulting in a final center point that is
+             * inaccurate. The solution seems to be to either separate them with a timeout or
+              * to collapse them into a setView call.
+             */
         // Zooming and Panning
         if (changes['zoom'] && changes['center'] && null != this.zoom && null != this.center) {
-            this.setView(changes['center'].currentValue, changes['zoom'].currentValue);
+            this.setFlyTo(changes['center'].currentValue, changes['zoom'].currentValue);
+            this.map.once('moveend', function () { _this.moveEnd.emit(); });
         }
         else if (changes['zoom']) {
             this.setZoom(changes['zoom'].currentValue);
@@ -76,11 +79,11 @@ var LeafletDirective = /** @class */ (function () {
      * Resize the map to fit it's parent container
      */
     /**
-         * Resize the map to fit it's parent container
-         */
+       * Resize the map to fit it's parent container
+       */
     LeafletDirective.prototype.doResize = /**
-         * Resize the map to fit it's parent container
-         */
+       * Resize the map to fit it's parent container
+       */
     function () {
         var _this = this;
         // Run this outside of angular so the map events stay outside of angular
@@ -94,11 +97,11 @@ var LeafletDirective = /** @class */ (function () {
      * Manage a delayed resize of the component
      */
     /**
-         * Manage a delayed resize of the component
-         */
+       * Manage a delayed resize of the component
+       */
     LeafletDirective.prototype.delayResize = /**
-         * Manage a delayed resize of the component
-         */
+       * Manage a delayed resize of the component
+       */
     function () {
         if (null != this.resizeTimer) {
             clearTimeout(this.resizeTimer);
@@ -111,18 +114,23 @@ var LeafletDirective = /** @class */ (function () {
      * @param zoom The new zoom level
      */
     /**
-         * Set the view (center/zoom) all at once
-         * @param center The new center
-         * @param zoom The new zoom level
-         */
+       * Set the view (center/zoom) all at once
+       * @param center The new center
+       * @param zoom The new zoom level
+       */
     LeafletDirective.prototype.setView = /**
-         * Set the view (center/zoom) all at once
-         * @param center The new center
-         * @param zoom The new zoom level
-         */
+       * Set the view (center/zoom) all at once
+       * @param center The new center
+       * @param zoom The new zoom level
+       */
     function (center, zoom) {
         if (this.map && null != center && null != zoom) {
             this.map.setView(center, zoom, this.zoomPanOptions);
+        }
+    };
+    LeafletDirective.prototype.setFlyTo = function (center, zoom) {
+        if (this.map && null != center && null != zoom) {
+            this.map.flyTo(center, zoom, this.zoomPanOptions);
         }
     };
     /**
@@ -130,13 +138,13 @@ var LeafletDirective = /** @class */ (function () {
      * @param zoom the new zoom level for the map
      */
     /**
-         * Set the map zoom level
-         * @param zoom the new zoom level for the map
-         */
+       * Set the map zoom level
+       * @param zoom the new zoom level for the map
+       */
     LeafletDirective.prototype.setZoom = /**
-         * Set the map zoom level
-         * @param zoom the new zoom level for the map
-         */
+       * Set the map zoom level
+       * @param zoom the new zoom level for the map
+       */
     function (zoom) {
         if (this.map && null != zoom) {
             this.map.setZoom(zoom, this.zoomOptions);
@@ -147,13 +155,13 @@ var LeafletDirective = /** @class */ (function () {
      * @param center the center point
      */
     /**
-         * Set the center of the map
-         * @param center the center point
-         */
+       * Set the center of the map
+       * @param center the center point
+       */
     LeafletDirective.prototype.setCenter = /**
-         * Set the center of the map
-         * @param center the center point
-         */
+       * Set the center of the map
+       * @param center the center point
+       */
     function (center) {
         if (this.map && null != center) {
             this.map.panTo(center, this.panOptions);
@@ -164,13 +172,13 @@ var LeafletDirective = /** @class */ (function () {
      * @param center the center point
      */
     /**
-         * Fit the map to the bounds
-         * @param center the center point
-         */
+       * Fit the map to the bounds
+       * @param center the center point
+       */
     LeafletDirective.prototype.setFitBounds = /**
-         * Fit the map to the bounds
-         * @param center the center point
-         */
+       * Fit the map to the bounds
+       * @param center the center point
+       */
     function (latLngBounds) {
         if (this.map && null != latLngBounds) {
             this.map.fitBounds(latLngBounds, this.fitBoundsOptions);
@@ -196,6 +204,7 @@ var LeafletDirective = /** @class */ (function () {
         "zoom": [{ type: core.Input, args: ['leafletZoom',] },],
         "center": [{ type: core.Input, args: ['leafletCenter',] },],
         "fitBounds": [{ type: core.Input, args: ['leafletFitBounds',] },],
+        "moveEnd": [{ type: core.Output, args: ['leafletMoveEnd',] },],
         "onResize": [{ type: core.HostListener, args: ['window:resize', [],] },],
     };
     return LeafletDirective;
@@ -696,8 +705,6 @@ var LeafletModule = /** @class */ (function () {
                     ]
                 },] },
     ];
-    /** @nocollapse */
-    LeafletModule.ctorParameters = function () { return []; };
     return LeafletModule;
 }());
 
