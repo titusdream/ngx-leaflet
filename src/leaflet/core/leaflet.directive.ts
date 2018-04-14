@@ -87,7 +87,9 @@ export class LeafletDirective
 
     // Zooming and Panning
     if (changes['zoom'] && changes['center'] && null != this.zoom && null != this.center) {
-      this.setFlyTo(changes['center'].currentValue, changes['zoom'].currentValue);
+      const targetPoint = this.map.project(changes['center'].currentValue, changes['zoom'].currentValue).subtract([300, 0]);
+      const targetLatLng = this.map.unproject(targetPoint, changes['zoom'].currentValue);
+      this.setFlyTo(targetLatLng, changes['zoom'].currentValue);
       this.map.once('moveend', () => { this.moveEnd.emit(); });
     }
     // Set the zoom level
