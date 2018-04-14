@@ -1,9 +1,17 @@
 import {
-  Directive, ElementRef, EventEmitter, HostListener, Input, NgZone, OnChanges, OnInit, Output,
+  Directive,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  NgZone,
+  OnChanges,
+  OnInit,
+  Output,
   SimpleChange
 } from '@angular/core';
 
-import { latLng, LatLng, LatLngBounds, map, Map, MapOptions} from 'leaflet';
+import {latLng, LatLng, LatLngBounds, map, Map, MapOptions, point, PointExpression} from 'leaflet';
 
 @Directive({
   selector: '[leaflet]'
@@ -42,6 +50,8 @@ export class LeafletDirective
   @Input('leafletFitBounds') fitBounds: LatLngBounds;
 
   @Output('leafletMoveEnd') moveEnd = new EventEmitter();
+
+  @Input('leafletViewOffset') viewOffset: PointExpression;
 
   constructor(private element: ElementRef, private zone: NgZone) {
     // Nothing here
@@ -87,10 +97,10 @@ export class LeafletDirective
 
     // Zooming and Panning
     if (changes['zoom'] && changes['center'] && null != this.zoom && null != this.center) {
-      const targetPoint = this.map.project(changes['center'].currentValue, changes['zoom'].currentValue).subtract([300, 0]);
-      const targetLatLng = this.map.unproject(targetPoint, changes['zoom'].currentValue);
-      this.setFlyTo(targetLatLng, changes['zoom'].currentValue);
-      this.map.once('moveend', () => { this.moveEnd.emit(); });
+      const vo = (changes['viewOffset'] && null != this.viewOffset) ? changes['viewOffset'].currentValue :
+          (null != this.viewOffset) ? this.viewOffset : point(0, 0);
+      const c = this.calcViewOffset(changes['center'].currentValue, changes['zoom'].currentValue, vo);
+      this.setFlyTo(c, changes['zoom'].currentValue);
     }
     // Set the zoom level
     else if (changes['zoom']) {
@@ -160,6 +170,7 @@ export class LeafletDirective
   private setFlyTo(center: LatLng, zoom: number) {
     if (this.map && null != center && null != zoom) {
       this.map.flyTo(center, zoom, this.zoomPanOptions);
+      this.map.once('moveend', () => { this.moveEnd.emit(); });
     }
   }
 
@@ -189,13 +200,16 @@ export class LeafletDirective
 
   /**
    * Fit the map to the bounds
-   * @param center the center point
+   * @param latLngBounds the bounds
    */
   private setFitBounds(latLngBounds: LatLngBounds) {
 
     if (this.map && null != latLngBounds) {
       this.map.fitBounds(latLngBounds, this.fitBoundsOptions);
     }
+  }
 
+  private calcViewOffset(center: LatLng, zoom: number, vo: PointExpression): LatLng {
+    return (this.map) ? this.map.unproject(this.map.project(center, zoom).subtract(vo), zoom) : center;
   }
 }

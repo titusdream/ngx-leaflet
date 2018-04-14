@@ -1,5 +1,5 @@
 import { ElementRef, EventEmitter, NgZone, OnChanges, OnInit, SimpleChange } from '@angular/core';
-import { LatLng, LatLngBounds, Map, MapOptions } from 'leaflet';
+import { LatLng, LatLngBounds, Map, MapOptions, PointExpression } from 'leaflet';
 export declare class LeafletDirective implements OnChanges, OnInit {
     private element;
     private zone;
@@ -18,6 +18,7 @@ export declare class LeafletDirective implements OnChanges, OnInit {
     center: LatLng;
     fitBounds: LatLngBounds;
     moveEnd: EventEmitter<{}>;
+    viewOffset: PointExpression;
     constructor(element: ElementRef, zone: NgZone);
     ngOnInit(): void;
     ngOnChanges(changes: {
@@ -52,7 +53,8 @@ export declare class LeafletDirective implements OnChanges, OnInit {
     private setCenter(center);
     /**
      * Fit the map to the bounds
-     * @param center the center point
+     * @param latLngBounds the bounds
      */
     private setFitBounds(latLngBounds);
+    private calcViewOffset(center, zoom, vo);
 }

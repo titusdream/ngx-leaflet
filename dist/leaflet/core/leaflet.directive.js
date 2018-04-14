@@ -1,5 +1,5 @@
 import { Directive, ElementRef, EventEmitter, HostListener, Input, NgZone, Output } from '@angular/core';
-import { latLng, LatLng, LatLngBounds, map } from 'leaflet';
+import { latLng, LatLng, LatLngBounds, map, point } from 'leaflet';
 var LeafletDirective = /** @class */ (function () {
     function LeafletDirective(element, zone) {
         // Nothing here
@@ -39,7 +39,6 @@ var LeafletDirective = /** @class */ (function () {
         this.mapReady.emit(this.map);
     };
     LeafletDirective.prototype.ngOnChanges = function (changes) {
-        var _this = this;
         /*
              * The following code is to address an issue with our (basic) implementation of
              * zooming and panning. From our testing, it seems that a pan operation followed
@@ -50,10 +49,10 @@ var LeafletDirective = /** @class */ (function () {
              */
         // Zooming and Panning
         if (changes['zoom'] && changes['center'] && null != this.zoom && null != this.center) {
-            var targetPoint = this.map.project(changes['center'].currentValue, changes['zoom'].currentValue).subtract([300, 0]);
-            var targetLatLng = this.map.unproject(targetPoint, changes['zoom'].currentValue);
-            this.setFlyTo(targetLatLng, changes['zoom'].currentValue);
-            this.map.once('moveend', function () { _this.moveEnd.emit(); });
+            var vo = (changes['viewOffset'] && null != this.viewOffset) ? changes['viewOffset'].currentValue :
+                (null != this.viewOffset) ? this.viewOffset : point(0, 0);
+            var c = this.calcViewOffset(changes['center'].currentValue, changes['zoom'].currentValue, vo);
+            this.setFlyTo(c, changes['zoom'].currentValue);
         }
         else if (changes['zoom']) {
             this.setZoom(changes['zoom'].currentValue);
@@ -126,8 +125,10 @@ var LeafletDirective = /** @class */ (function () {
         }
     };
     LeafletDirective.prototype.setFlyTo = function (center, zoom) {
+        var _this = this;
         if (this.map && null != center && null != zoom) {
             this.map.flyTo(center, zoom, this.zoomPanOptions);
+            this.map.once('moveend', function () { _this.moveEnd.emit(); });
         }
     };
     /**
@@ -166,20 +167,23 @@ var LeafletDirective = /** @class */ (function () {
     };
     /**
      * Fit the map to the bounds
-     * @param center the center point
+     * @param latLngBounds the bounds
      */
     /**
        * Fit the map to the bounds
-       * @param center the center point
+       * @param latLngBounds the bounds
        */
     LeafletDirective.prototype.setFitBounds = /**
        * Fit the map to the bounds
-       * @param center the center point
+       * @param latLngBounds the bounds
        */
     function (latLngBounds) {
         if (this.map && null != latLngBounds) {
             this.map.fitBounds(latLngBounds, this.fitBoundsOptions);
         }
+    };
+    LeafletDirective.prototype.calcViewOffset = function (center, zoom, vo) {
+        return (this.map) ? this.map.unproject(this.map.project(center, zoom).subtract(vo), zoom) : center;
     };
     LeafletDirective.decorators = [
         { type: Directive, args: [{
@@ -202,6 +206,7 @@ var LeafletDirective = /** @class */ (function () {
         "center": [{ type: Input, args: ['leafletCenter',] },],
         "fitBounds": [{ type: Input, args: ['leafletFitBounds',] },],
         "moveEnd": [{ type: Output, args: ['leafletMoveEnd',] },],
+        "viewOffset": [{ type: Input, args: ['leafletViewOffset',] },],
         "onResize": [{ type: HostListener, args: ['window:resize', [],] },],
     };
     return LeafletDirective;
